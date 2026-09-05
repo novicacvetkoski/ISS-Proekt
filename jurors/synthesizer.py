@@ -13,7 +13,7 @@ import re
 
 import ollama
 
-from .base import DEFAULT_MODEL, DEFAULT_NUM_CTX
+from .base import DEFAULT_MODEL, DEFAULT_NUM_CTX, find_citation_flags, normalize_verdict
 
 SYNTHESIZER_PROMPT = """\
 You are the synthesizer for a five-juror AI jury reasoning about an Indian Supreme
@@ -31,14 +31,19 @@ Rules:
   restate that "the jury discussed several views."
 - Note any juror who dissented and briefly state their reasoning, even in the final
   summary — dissent should remain visible, not smoothed over.
-- Do not fabricate legal citations you were not given by the jurors.
+- Your "final_verdict" field must be exactly one of: "uphold", "quash", "modify".
+- Do NOT name, cite, or refer to any specific case (no case names, years, or SCC/AIR
+  reference numbers) even if a juror's reasoning mentioned one. You are a small local
+  model and are highly likely to fabricate or repeat a fabricated citation if you
+  attempt this. Summarize the underlying legal principle a juror relied on in your
+  own words instead, without attaching a case name to it.
 
 Respond with a single fenced JSON block and nothing else outside it:
 ```json
 {
-  "final_verdict": "<the jury's collective verdict>",
-  "vote_breakdown": {"<juror name>": "<their final verdict>", ...},
-  "rationale": "<several sentences explaining why this verdict was reached, citing the decisive arguments>",
+  "final_verdict": "uphold | quash | modify",
+  "vote_breakdown": {"<juror name>": "uphold | quash | modify", ...},
+  "rationale": "<several sentences explaining why this verdict was reached, citing the decisive arguments in your own words, no case citations>",
   "dissent_summary": "<null if unanimous, otherwise a summary of dissenting reasoning>"
 }
 ```
@@ -75,6 +80,7 @@ class Synthesizer:
             options={"temperature": 0.4, "num_ctx": self.num_ctx},  # lower temp: aggregation, not debate
         )
         raw = response["message"]["content"]
+
         self.raw_output = raw
         parsed = self._extract_json(raw)
         if parsed is None:
@@ -84,7 +90,12 @@ class Synthesizer:
                 "rationale": f"[UNPARSED SYNTHESIZER OUTPUT]\n{raw}",
                 "dissent_summary": None,
             }
+        else:
+            # Normalize even though the prompt requests controlled vocabulary directly —
+            # safety net for when the model doesn't comply, same rationale as juror parsing.
+            parsed["final_verdict"] = normalize_verdict(parsed.get("final_verdict"))
         parsed["raw_output"] = raw
+        parsed["flagged_citations"] = find_citation_flags(raw)
         return parsed
 
     @staticmethod

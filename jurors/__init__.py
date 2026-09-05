@@ -1,5 +1,5 @@
-from jurors.base import JurorAgent, Position, DEFAULT_MODEL, DEFAULT_NUM_CTX
-from jurors.personas import (
+from .base import JurorAgent, Position, DEFAULT_MODEL, DEFAULT_NUM_CTX
+from .personas import (
     TextualistJuror,
     PrecedentHawkJuror,
     EquityAdvocateJuror,

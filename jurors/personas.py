@@ -11,7 +11,7 @@ rather than cosmetic personality flavor. All personas are grounded in Indian law
 since the project now targets the ILDC (Indian Supreme Court) dataset.
 """
 
-from .base import JurorAgent
+from jurors.base import JurorAgent
 
 
 class TextualistJuror(JurorAgent):
