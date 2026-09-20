@@ -1,0 +1,40 @@
+[project]
+name = "ai-jury"
+version = "0.1.0"
+description = "Debate-based multi-agent AI jury evaluated against real Indian Supreme Court outcomes (ILDC/CJPE)"
+requires-python = ">=3.12"
+dependencies = [
+    "langgraph>=0.2",
+    "google-genai>=1.0",
+    "memorizz>=0.10",
+    "pydantic>=2.7",
+    "pyyaml>=6.0",
+    "tenacity>=8.2",
+    "ollama>=0.6",
+]
+
+[project.optional-dependencies]
+data = [
+    # IL-TUR ships a loading script; datasets>=4.0 removed script-based datasets entirely.
+    "datasets<4.0.0",
+    "huggingface_hub",
+]
+analysis = [
+    "pandas>=2.0",
+    "statsmodels>=0.14",
+    "scipy>=1.11",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["jury"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

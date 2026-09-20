@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.memorizz/
+runs/
+data/*_pool.json
+data/expert_ids.json
+graphify-out/cache/
+.pytest_cache/
+graphify-out/

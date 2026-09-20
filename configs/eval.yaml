@@ -1,0 +1,24 @@
+# The experiment. Model is PINNED: an eval run must not straddle two models.
+# Changing anything in this file changes config_hash, which is recorded in every
+# artifact — results produced under different hashes are not comparable.
+name: eval_v1
+pool: eval
+conditions: [control, treatment]
+seed: 42
+
+juror_model:
+  backend: gemini
+  model: gemini-3.8-flash
+  temperature: 1.0
+
+clerk_model:
+  backend: gemini
+  model: gemini-3.8-flash
+  temperature: 0.4
+
+deliberation:
+  min_rounds: 1
+  max_rounds: 4
+  stable_rounds_to_stop: 2
+  max_claims_per_juror_in_digest: 3
+  max_words_per_claim_in_digest: 40
