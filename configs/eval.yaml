@@ -7,14 +7,16 @@ conditions: [control, treatment]
 seed: 42
 
 juror_model:
-  backend: gemini
-  model: gemini-3.8-flash
+  backend: meta
+  model: muse-spark-1.2-contributor
   temperature: 1.0
+  max_output_tokens: 4000
 
 clerk_model:
-  backend: gemini
-  model: gemini-3.8-flash
+  backend: meta
+  model: muse-spark-1.2-contributor
   temperature: 0.4
+  max_output_tokens: 3000
 
 deliberation:
   min_rounds: 1

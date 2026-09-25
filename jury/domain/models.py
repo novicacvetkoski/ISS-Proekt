@@ -13,6 +13,7 @@ TWO CLASSES OF MODEL LIVE HERE, and the distinction matters:
 """
 
 from datetime import datetime, timezone
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -114,6 +115,34 @@ class ClerkVerdict(BaseModel):
     dissent_summary: str | None = Field(description="Dissenting reasoning, or null if unanimous")
 
 
+class MemorizationProbeResponse(BaseModel):
+    """
+    Diagnostic-only — never part of the deliberation graph. Asks the pinned juror
+    model, on the same label-free case text a juror would see, whether it recognizes
+    the specific real case (not just the area of law) and what outcome it recalls for
+    it from memory rather than from reasoning over the materials. See
+    experiments/memorization_probe.py for why this exists and how it's scored.
+    """
+    recognizes_case: bool = Field(
+        description="True only if you can point to a specific fact or detail that identifies "
+                    "this as a particular case you have prior knowledge of, not just a familiar "
+                    "area of law"
+    )
+    case_identification: str = Field(
+        description="Names, court, year, or citation you recall for this case; empty string if "
+                    "you do not recognize it"
+    )
+    recalled_outcome: Literal["ALLOW", "DISMISS", "UNSURE"] = Field(
+        description="The real-world outcome you recall for THIS specific case from memory, never "
+                    "inferred from the materials below. UNSURE if you do not recognize the case, "
+                    "or recognize the topic but not this outcome specifically"
+    )
+    recall_basis: str = Field(
+        description="The specific fact, phrase, or detail that triggered recognition, or a brief "
+                    "note confirming you do not recognize it"
+    )
+
+
 # --------------------------------------------------------------------------- #
 # Record schemas — defaults allowed, never sent as a provider schema
 # --------------------------------------------------------------------------- #
@@ -127,7 +156,26 @@ class Usage(BaseModel):
     input_tokens: int = 0
     output_tokens: int = 0
     cached_tokens: int = 0
+    reasoning_tokens: int = 0    # billed as output; Meta's Muse Spark reasons mandatorily,
+                                  # so this is often non-zero there even at "low" effort
     model: str = ""
+
+
+class MemorizationProbeResult(BaseModel):
+    """
+    One case's probe result. Deliberately its own type, not a RunRecord — it lives
+    under its own runs/memorization_probe/ tree so it can never be mistaken for, or
+    accidentally picked up by, the RQ1/RQ2 analysis over real experiment runs.
+    """
+    case_id: str
+    pool: str
+    recognizes_case: bool
+    case_identification: str
+    recalled_outcome: str
+    recall_basis: str
+    usage: Usage = Field(default_factory=Usage)
+    provenance: dict = Field(default_factory=dict)
+    timestamp: str = Field(default_factory=_now)
 
 
 class Ballot(BaseModel):

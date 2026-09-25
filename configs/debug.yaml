@@ -1,17 +1,17 @@
 # Prompt iteration. Cheap model, debug pool, both conditions.
 name: debug
 pool: debug
-conditions: [control, treatment]
+conditions: [control,treatment]
 seed: 42
 
 juror_model:
-  backend: gemini
-  model: gemini-3.5-flash-lite
+  backend: meta
+  model: muse-spark-1.2-contributor
   temperature: 1.0
 
 clerk_model:
-  backend: gemini
-  model: gemini-3.5-flash-lite
+  backend: meta
+  model: muse-spark-1.2-contributor
   temperature: 0.4
 
 deliberation:

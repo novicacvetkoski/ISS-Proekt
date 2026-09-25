@@ -22,12 +22,23 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 class ModelConfig(BaseModel):
-    backend: Literal["gemini", "ollama"] = "gemini"
+    backend: Literal["gemini", "ollama", "meta"] = "gemini"
     model: str = "gemini-3.8-flash"
     temperature: float = 1.0
     thinking_level: str | None = None
     max_output_tokens: int | None = None
     num_ctx: int = 3072              # ollama only
+    reasoning_effort: str | None = "low"   # meta only — Muse Spark reasons mandatorily
+                                            # (a 400 if you pass "none"), and those tokens
+                                            # bill as output and count against
+                                            # max_output_tokens. Meta's own default is
+                                            # "medium", which is what let a merely-5-string
+                                            # ClerkAgenda call burn its whole budget on
+                                            # reasoning and return empty content with
+                                            # finish_reason="length". "low" is a deliberate,
+                                            # overridable-per-role safety default, not a
+                                            # measured-optimal value — raise it for juror_model
+                                            # specifically if verdict quality seems to suffer.
     verify_on_start: bool = True
 
 
