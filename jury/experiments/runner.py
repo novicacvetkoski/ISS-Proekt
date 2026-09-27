@@ -199,7 +199,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True)
     parser.add_argument("--condition", action="append", dest="conditions",
-                        choices=["control", "treatment"],
+                        choices=["control", "treatment", "sway"],
                         help="Defaults to the conditions listed in the config")
     parser.add_argument("--limit", type=int, help="Only the first N cases of the pool")
     parser.add_argument("--case-index", type=int, help="Run exactly one case by pool index")

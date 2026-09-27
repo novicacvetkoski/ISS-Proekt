@@ -240,7 +240,7 @@ class RunRecord(BaseModel):
     of resumability: written atomically, skipped by the runner if present.
     """
     case_id: str
-    condition: str               # "control" | "treatment" | "single_agent" | "noise"
+    condition: str               # "control" | "treatment" | "sway" | "single_agent" | "noise"
     experiment: str
     verdict: JuryVerdict
     gold_label: int | None       # filled in by ANALYSIS, never present during the run

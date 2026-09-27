@@ -25,7 +25,7 @@ from ..domain.models import (
 class JuryState(TypedDict, total=False):
     # identity
     case_id: str
-    condition: str                 # "control" | "treatment"
+    condition: str                 # "control" | "treatment" | "sway"
 
     # round 0
     assessments: Annotated[list[tuple[str, PrivateAssessment]], operator.add]

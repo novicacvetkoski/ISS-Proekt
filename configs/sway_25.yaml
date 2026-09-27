@@ -1,0 +1,37 @@
+# Random-persuader paired contrast (25 cases, time-boxed).
+#
+# Deliberately a SEPARATE experiment from eval.yaml/debug.yaml, not a variant of them:
+# the "sway" condition uses assign_sway_persuader (jury/jurors/persuader.py), a genuinely
+# different mechanism from "treatment"'s assign_persuader -- any of the five jurors can be
+# drawn, arguing for whatever it already believes, rather than always the opposite of the
+# round-0 majority. Results here are NOT comparable to eval_v1's treatment condition and
+# must not be pooled with it in any analysis.
+#
+# control under this config is byte-identical in every setting to eval_v1's control, which
+# is what makes it safe to reuse eval_v1's already-computed round-0 + control results via
+# `python -m jury.experiments.prep_sway_25` instead of re-spending on them.
+name: sway_25
+pool: eval
+conditions: [control, sway]
+seed: 42
+
+juror_model:
+  backend: meta
+  model: muse-spark-1.2-contributor
+  temperature: 1.0
+  reasoning_effort: low
+  max_output_tokens: 4000
+
+clerk_model:
+  backend: meta
+  model: muse-spark-1.2-contributor
+  temperature: 0.4
+  reasoning_effort: low
+  max_output_tokens: 3000
+
+deliberation:
+  min_rounds: 1
+  max_rounds: 4
+  stable_rounds_to_stop: 2
+  max_claims_per_juror_in_digest: 3
+  max_words_per_claim_in_digest: 40

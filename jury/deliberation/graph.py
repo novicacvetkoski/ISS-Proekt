@@ -24,7 +24,7 @@ from ..domain.models import CaseFile, JuryVerdict, Position, Usage
 from ..domain.verdicts import majority_verdict
 from ..jurors.clerk import Clerk
 from ..jurors.juror import Juror, position_from_assessment, position_from_statement
-from ..jurors.persuader import assign_persuader, build_overlay
+from ..jurors.persuader import assign_persuader, assign_sway_persuader, build_overlay
 from .digest import build_digest, namespaced_claim_id, vote_tally
 from .rules import final_votes, should_stop
 from .state import JuryState
@@ -77,7 +77,7 @@ class DeliberationEngine:
             return [Send("private_review", {**state, "_juror_id": jid}) for jid in self.jurors]
         if not state.get("agenda"):
             return "clerk_agenda"
-        return "assign_persuader" if state["condition"] == "treatment" else "round_start"
+        return "assign_persuader" if state["condition"] in ("treatment", "sway") else "round_start"
 
     def private_review(self, state: dict) -> dict:
         juror = self.jurors[state["_juror_id"]]
@@ -101,9 +101,15 @@ class DeliberationEngine:
         return {"agenda": issues, "usages": [usage], "round": 0}
 
     def assign_persuader_node(self, state: JuryState) -> dict:
-        """Treatment only. Runs after round 0 so the target can oppose the actual majority."""
+        """
+        Treatment/sway only. Runs after round 0 so the assignment can use real round-0
+        data (the vote split for "treatment", the chosen juror's own verdict for "sway").
+        """
         round0 = [p for p in state["positions"] if p.round == 0]
-        assignment = assign_persuader(round0, seed=self.cfg.seed, case_id=state["case_id"])
+        if state["condition"] == "sway":
+            assignment = assign_sway_persuader(round0, seed=self.cfg.seed, case_id=state["case_id"])
+        else:
+            assignment = assign_persuader(round0, seed=self.cfg.seed, case_id=state["case_id"])
         return {"persuader": assignment}
 
     def _fan_out_round(self, state: JuryState) -> list[Send]:
@@ -177,7 +183,7 @@ class DeliberationEngine:
     # -- wiring ----------------------------------------------------------- #
 
     def _route_after_agenda(self, state: JuryState) -> str:
-        return "assign_persuader" if state["condition"] == "treatment" else "deliberate"
+        return "assign_persuader" if state["condition"] in ("treatment", "sway") else "deliberate"
 
     def _route_after_tally(self, state: JuryState) -> str:
         return "clerk_verdict" if state["done"] else "deliberate"

@@ -107,3 +107,42 @@ def assign_persuader(
         selected_because=reason,
         agreed_with_target_at_round0=chosen.verdict is target,
     )
+
+
+def assign_sway_persuader(
+    round0_positions: list[Position],
+    seed: int,
+    case_id: str,
+) -> PersuaderAssignment:
+    """
+    A deliberately different design from assign_persuader() above, for a narrower
+    question: not "does the panel resist an engineered counter-majority holdout", but
+    "if any one juror sets out to actively sway the room, does the verdict change" —
+    with neither who that juror is nor what they argue for fixed by construction.
+
+    Selection is uniform at random over all five jurors, independent of the round-0
+    vote split — a majority member can be picked as readily as a minority one. The
+    target is that juror's OWN round-0 verdict: it is not assigned a position to argue
+    for, it argues the one it already holds, only with more persistence and rhetorical
+    intent than an ordinary juror would. agreed_with_target_at_round0 is therefore always
+    True by construction, unlike assign_persuader's version of that field, which can be
+    False when a unanimous panel's random pick still gets assigned the (necessarily
+    counter-consensus) target — kept for schema and downstream-analysis compatibility.
+
+    Reproducible from (seed, case_id), same as assign_persuader — but namespaced with
+    ":sway:" in the RNG seed string so the two functions never coincidentally draw the
+    same "random" choice on a shared (seed, case_id) if both conditions are ever run in
+    the same experiment.
+    """
+    if not round0_positions:
+        raise ValueError("Cannot assign a persuader before round 0.")
+
+    rng = random.Random(f"{seed}:sway:{case_id}")
+    chosen = rng.choice(sorted(round0_positions, key=lambda p: p.juror_id))
+
+    return PersuaderAssignment(
+        juror_id=chosen.juror_id,
+        target_verdict=chosen.verdict,
+        selected_because="random_uniform",
+        agreed_with_target_at_round0=True,
+    )
